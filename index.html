@@ -2,373 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trivia App</title>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bypass Trivia</title>
   <style>
-    :root {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      --bg: #0b1220;
-      --card: rgba(255,255,255,.05);
-      --text: #eaf0ff;
-      --muted: rgba(234,240,255,.75);
-      --accent: #60a5fa;
-      --accent2: #34d399;
-      --border: rgba(255,255,255,.12);
+    :root{
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      --bg:#070b14;
+      --card:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.75);
+      --accent:#60a5fa;
+      --accent2:#34d399;
+      --pink:#ff4fd8;
+      --cyan:#25f3ff;
     }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: radial-gradient(circle at 20% 20%, rgba(96, 165, 250, .25), rgba(0,0,0,0) 45%),
-                  radial-gradient(circle at 80% 70%, rgba(52, 211, 153, .25), rgba(0,0,0,0) 45%),
-                  linear-gradient(180deg, rgba(5, 8, 15, .95), rgba(10, 15, 25, .95));
-      color: var(--text);
-      display: grid;
-      place-items: center;
-      padding: 28px 14px;
+    body{
+      margin:0; min-height:100vh; display:grid; place-items:center; padding:22px 14px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,79,216,.22), rgba(0,0,0,0) 45%),
+        radial-gradient(circle at 80% 70%, rgba(37,243,255,.20), rgba(0,0,0,0) 45%),
+        linear-gradient(180deg, rgba(4,6,12,.98), rgba(8,12,22,.98));
+      color:var(--text);
     }
-    .container {
-      width: min(880px, 100%);
-      border-radius: 18px;
-      padding: 22px 18px;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    .wrap{
+      width:min(920px,100%);
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border-radius:18px; padding:18px;
+      box-shadow:0 24px 70px rgba(0,0,0,.55);
     }
-    h1 {
-      margin: 0;
-      font-weight: 750;
-      letter-spacing: .2px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    h1{margin:0; font-weight:850; letter-spacing:.3px; display:flex; align-items:center; gap:10px;}
+    h1 .dot{
+      width:12px;height:12px;border-radius:999px;
+      background:radial-gradient(circle at 30% 30%, #fff, var(--cyan));
+      box-shadow:0 0 18px rgba(37,243,255,.65);
     }
-    h1::after {
-      content: "";
-      width: 10px;
-      height: 10px;
-      border-radius: 10px;
-      background: radial-gradient(circle at 30% 30%, #fff, var(--accent));
-      box-shadow: 0 0 20px rgba(96, 165, 250, .6);
+    .sub{margin-top:8px; color:var(--muted); line-height:1.4;}
+    .grid{margin-top:16px; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+    a.btn{
+      display:block; text-decoration:none; color:var(--text);
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.06);
+      padding:14px; border-radius:14px;
+      transition:transform .06s ease, background .2s ease, border-color .2s ease;
+      font-weight:800;
     }
-    .meta {
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .row {
-      margin-top: 16px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .status {
-      color: var(--muted);
-      font-size: 14px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    .status .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 8px;
-      background: var(--border);
-      box-shadow: 0 0 0 3px rgba(255,255,255,.05);
-    }
-    .status[data-kind="live"] .dot { background: var(--accent2); }
-    .status[data-kind="error"] .dot { background: #fb7185; }
-    button {
-      border: 1px solid rgba(255,255,255,.15);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: transform .05s ease, background .2s ease, border-color .2s ease;
-      font-weight: 700;
-      letter-spacing: .2px;
-    }
-    button:hover {
-      transform: translateY(-1px);
-      background: rgba(255,255,255,.08);
-      border-color: rgba(255,255,255,.22);
-    }
-    button:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    button.primary {
-      border-color: rgba(96, 165, 250, .35);
-      background: radial-gradient(circle at 40% 0%, rgba(255,255,255,.25), rgba(255,255,255,0) 60%), rgba(96, 165, 250, .16);
-    }
-    .card {
-      margin-top: 14px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,.15);
-      padding: 14px;
-    }
-    .question {
-      font-size: 18px;
-      font-weight: 750;
-      line-height: 1.3;
-      margin: 0 0 12px 0;
-    }
-    .answers {
-      display: grid;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .answers button {
-      text-align: left;
-      display: flex;
-      justify-content: between;
-      align-items: center;
-      width: 100%;
-    }
-    .answers button .chip {
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.05);
-      padding: 3px 8px;
-      border-radius: 999px;
-      margin-left: 12px;
-      flex-shrink: 0;
-    }
-    .hidden { display: none; }
-    .result {
-      margin-top: 14px;
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(52, 211, 153, .35);
-      background: rgba(52, 211, 153, .12);
-    }
-    .result h2 {
-      margin: 0 0 8px 0;
-    }
-    .result .summary {
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .footer {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 12px;
-      text-align: center;
-    }
+    a.btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.24);}
+    .mini{margin-top:6px; color:var(--muted); font-weight:600; font-size:13px;}
+    .footer{margin-top:14px; color:var(--muted); font-size:12px; text-align:center;}
+    code{background:rgba(0,0,0,.25); padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.12);}
   </style>
-
-  <!-- FIREBASE: goes here after </style> -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBqUJwvod3rlNU2sIUnzgBthdbbOPsxB9s",
-      authDomain: "the-bypass-168-trivia.firebaseapp.com",
-      projectId: "the-bypass-168-trivia",
-      storageBucket: "the-bypass-168-trivia.firebasestorage.app",
-      messagingSenderId: "590337302600",
-      appId: "1:590337302600:web:be73cf77f5cf955aa4787d",
-      measurementId: "G-DCJJFW8ZFY"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    (async () => {
-      await signInAnonymously(auth);
-      await setDoc(doc(db, "rooms", "TEST_ROOM"), { ok: true, at: Date.now() });
-      console.log("✅ Firestore connected");
-    })().catch((err) => console.error("Firestore error", err));
-  </script>
 </head>
-
 <body>
-  <div class="container">
-    <h1>Trivia App</h1>
-    <div class="meta">Loads multiple-choice trivia questions and tracks your score.</div>
-
-    <div class="row">
-      <div id="status" class="status" data-kind="idle"><span class="dot"></span><span>Idle — press Start</span></div>
-      <div>
-        <button id="startBtn" class="primary">Start</button>
-        <button id="restartBtn" class="hidden">Restart</button>
-      </div>
+  <div class="wrap">
+    <h1><span class="dot"></span>Bypass Trivia</h1>
+    <div class="sub">
+      Host runs the game on a TV. Guests join on phones. Leaderboard updates live.
+      <br/>Tip: use <code>?room=bypass168</code> to lock to one room.
     </div>
 
-    <div id="quiz" class="card hidden">
-      <div id="qMeta" class="status" data-kind="live"><span class="dot"></span><span></span></div>
-      <p id="question" class="question"></p>
-      <div id="answers" class="answers"></div>
-      <div class="row">
-        <div></div>
-        <button id="nextBtn" class="primary" disabled>Next</button>
-      </div>
-    </div>
-
-    <div id="result" class="result hidden">
-      <h2>Result</h2>
-      <div id="resultText" class="summary"></div>
+    <div class="grid">
+      <a class="btn" href="./host.html?room=bypass168">
+        Host (TV Control)
+        <div class="mini">Start rounds, timers, ads, next question</div>
+      </a>
+      <a class="btn" href="./play.html?room=bypass168">
+        Play (Phones)
+        <div class="mini">Guests join + answer live</div>
+      </a>
+      <a class="btn" href="./leaderboard.html?room=bypass168">
+        Leaderboard (TV)
+        <div class="mini">Big-screen scoreboard view</div>
+      </a>
     </div>
 
     <div class="footer">
-      Open Trivia Database (opentdb.com) is used; if it rate-limits or fails, a small fallback question set is used.
+      Uses Open Trivia DB for questions. Firebase/Firestore sync powers real-time play.
     </div>
   </div>
-
-  <script>
-    const amount = 10;
-    const api = `https://opentdb.com/api.php?amount=${amount}&type=multiple`;
-
-    const startBtn = document.getElementById('startBtn');
-    const restartBtn = document.getElementById('restartBtn');
-    const statusEl = document.getElementById('status');
-    const quizEl = document.getElementById('quiz');
-    const qMeta = document.getElementById('qMeta');
-    const questionEl = document.getElementById('question');
-    const answersEl = document.getElementById('answers');
-    const nextBtn = document.getElementById('nextBtn');
-    const resultEl = document.getElementById('result');
-    const resultText = document.getElementById('resultText');
-
-    let current = 0;
-    let score = 0;
-    let questions = [];
-    let selected = null;
-
-    const decode = (html) => {
-      const txt = document.createElement('textarea');
-      txt.innerHTML = html;
-      return txt.value;
-    };
-
-    const setStatus = (kind, text) => {
-      statusEl.dataset.kind = kind;
-      statusEl.querySelector('span:nth-child(2)').textContent = text;
-    };
-
-    const setQMeta = (text) => {
-      qMeta.querySelector('span:nth-child(2)').textContent = text;
-    };
-
-    const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
-
-    const fetchQuestions = async () => {
-      setStatus('live', 'Loading questions…');
-      try {
-        const res = await fetch(api);
-        if (!res.ok) throw new Error('Network error');
-        const data = await res.json();
-        if (!data.results || !data.results.length) throw new Error('Empty response');
-        setStatus('live', 'Loaded');
-        return data.results;
-      } catch (e) {
-        setStatus('error', 'API error — using fallback set');
-        return [
-          { question: 'What is the capital of France?', correct_answer: 'Paris', incorrect_answers: ['Lyon', 'Marseille', 'Nice'] },
-          { question: '2 + 2 = ?', correct_answer: '4', incorrect_answers: ['2', '3', '5'] },
-          { question: 'Which planet is known as the Red Planet?', correct_answer: 'Mars', incorrect_answers: ['Jupiter', 'Venus', 'Saturn'] },
-          { question: 'Who wrote Hamlet?', correct_answer: 'William Shakespeare', incorrect_answers: ['Charles Dickens', 'Mark Twain', 'Leo Tolstoy'] },
-        ];
-      }
-    };
-
-    const startQuiz = async () => {
-      current = 0;
-      score = 0;
-      selected = null;
-      nextBtn.disabled = true;
-      resultEl.classList.add('hidden');
-      restartBtn.classList.add('hidden');
-
-      questions = await fetchQuestions();
-      quizEl.classList.remove('hidden');
-      startBtn.classList.add('hidden');
-      render();
-    };
-
-    const render = () => {
-      const q = questions[current];
-      setQMeta(`Question ${current + 1} of ${questions.length}`);
-      questionEl.textContent = decode(q.question);
-
-      answersEl.innerHTML = '';
-      const choices = shuffle([q.correct_answer, ...q.incorrect_answers]);
-
-      choices.forEach((choice, idx) => {
-        const btn = document.createElement('button');
-        btn.textContent = decode(choice);
-
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = `Choice ${idx + 1}`;
-
-        btn.appendChild(chip);
-        btn.addEventListener('click', () => selectAnswer(choice, btn));
-        answersEl.appendChild(btn);
-      });
-
-      nextBtn.disabled = !selected;
-      if (selected) highlightSelection();
-    };
-
-    const selectAnswer = (choice, btn) => {
-      selected = choice;
-      nextBtn.disabled = false;
-      highlightSelection(btn);
-    };
-
-    const highlightSelection = (selectedBtn) => {
-      const buttons = Array.from(answersEl.querySelectorAll('button'));
-      buttons.forEach((b) => {
-        b.style.borderColor = 'rgba(255,255,255,.15)';
-        b.style.background = 'rgba(255,255,255,.06)';
-      });
-      if (selectedBtn) {
-        selectedBtn.style.borderColor = 'rgba(96,165,250,.45)';
-        selectedBtn.style.background = 'rgba(96,165,250,.12)';
-      } else {
-        buttons.find((b) => b.textContent.startsWith(decode(selected)))?.click();
-      }
-    };
-
-    const next = () => {
-      if (selected && selected === questions[current].correct_answer) score += 1;
-      selected = null;
-
-      if (current + 1 >= questions.length) {
-        finish();
-        return;
-      }
-
-      current += 1;
-      nextBtn.disabled = true;
-      render();
-    };
-
-    const finish = () => {
-      quizEl.classList.add('hidden');
-      resultEl.classList.remove('hidden');
-      restartBtn.classList.remove('hidden');
-      startBtn.classList.remove('hidden');
-      nextBtn.disabled = true;
-
-      setStatus('live', 'Done');
-      const percent = Math.round((score / questions.length) * 100);
-      resultText.textContent = `You scored ${score} out of ${questions.length} (${percent}%).`;
-    };
-
-    startBtn.addEventListener('click', startQuiz);
-    restartBtn.addEventListener('click', startQuiz);
-    nextBtn.addEventListener('click', next);
-  </script>
 </body>
 </html>
