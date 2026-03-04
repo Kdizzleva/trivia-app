@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trivia App</title>
+
   <style>
     :root {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -125,7 +126,7 @@
     .answers button {
       text-align: left;
       display: flex;
-      justify-content: space-between;
+      justify-content: between;
       align-items: center;
       width: 100%;
     }
@@ -161,7 +162,35 @@
       text-align: center;
     }
   </style>
+
+  <!-- FIREBASE: goes here after </style> -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqUJwvod3rlNU2sIUnzgBthdbbOPsxB9s",
+      authDomain: "the-bypass-168-trivia.firebaseapp.com",
+      projectId: "the-bypass-168-trivia",
+      storageBucket: "the-bypass-168-trivia.firebasestorage.app",
+      messagingSenderId: "590337302600",
+      appId: "1:590337302600:web:be73cf77f5cf955aa4787d",
+      measurementId: "G-DCJJFW8ZFY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    (async () => {
+      await signInAnonymously(auth);
+      await setDoc(doc(db, "rooms", "TEST_ROOM"), { ok: true, at: Date.now() });
+      console.log("✅ Firestore connected");
+    })().catch((err) => console.error("Firestore error", err));
+  </script>
 </head>
+
 <body>
   <div class="container">
     <h1>Trivia App</h1>
@@ -244,26 +273,10 @@
       } catch (e) {
         setStatus('error', 'API error — using fallback set');
         return [
-          {
-            question: 'What is the capital of France?',
-            correct_answer: 'Paris',
-            incorrect_answers: ['Lyon', 'Marseille', 'Nice'],
-          },
-          {
-            question: '2 + 2 = ?',
-            correct_answer: '4',
-            incorrect_answers: ['2', '3', '5'],
-          },
-          {
-            question: 'Which planet is known as the Red Planet?',
-            correct_answer: 'Mars',
-            incorrect_answers: ['Jupiter', 'Venus', 'Saturn'],
-          },
-          {
-            question: 'Who wrote Hamlet?',
-            correct_answer: 'William Shakespeare',
-            incorrect_answers: ['Charles Dickens', 'Mark Twain', 'Leo Tolstoy'],
-          },
+          { question: 'What is the capital of France?', correct_answer: 'Paris', incorrect_answers: ['Lyon', 'Marseille', 'Nice'] },
+          { question: '2 + 2 = ?', correct_answer: '4', incorrect_answers: ['2', '3', '5'] },
+          { question: 'Which planet is known as the Red Planet?', correct_answer: 'Mars', incorrect_answers: ['Jupiter', 'Venus', 'Saturn'] },
+          { question: 'Who wrote Hamlet?', correct_answer: 'William Shakespeare', incorrect_answers: ['Charles Dickens', 'Mark Twain', 'Leo Tolstoy'] },
         ];
       }
     };
@@ -323,16 +336,12 @@
         selectedBtn.style.borderColor = 'rgba(96,165,250,.45)';
         selectedBtn.style.background = 'rgba(96,165,250,.12)';
       } else {
-        // re-find the selected answer
         buttons.find((b) => b.textContent.startsWith(decode(selected)))?.click();
       }
     };
 
     const next = () => {
-      if (selected && selected === questions[current].correct_answer) {
-        score += 1;
-      }
-
+      if (selected && selected === questions[current].correct_answer) score += 1;
       selected = null;
 
       if (current + 1 >= questions.length) {
