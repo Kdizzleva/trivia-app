@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bypass Trivia — Leaderboard</title>
+  <style>
+    :root{
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      --bg:#070b14;
+      --card:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.75);
+      --pink:#ff4fd8;
+      --cyan:#25f3ff;
+      --green:#34d399;
+      --red:#fb7185;
+      --amber:#fbbf24;
+    }
+    body{
+      margin:0; min-height:100vh; padding:20px 16px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,79,216,.22), rgba(0,0,0,0) 45%),
+        radial-gradient(circle at 80% 70%, rgba(37,243,255,.18), rgba(0,0,0,0) 45%),
+        linear-gradient(180deg, rgba(4,6,12,.98), rgba(8,12,22,.98));
+      color:var(--text);
+    }
+    .wrap{
+      width:min(1200px,100%);
+      margin:0 auto;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border-radius:20px; padding:16px;
+      box-shadow:0 24px 70px rgba(0,0,0,.55);
+    }
+    .top{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; justify-content:space-between;}
+    h1{margin:0; font-weight:950; letter-spacing:.4px; display:flex; align-items:center; gap:10px;}
+    h1 .dot{width:14px;height:14px;border-radius:999px;background:radial-gradient(circle at 30% 30%, #fff, var(--cyan)); box-shadow:0 0 18px rgba(37,243,255,.65);}
+    .sub{margin-top:6px; color:var(--muted); font-weight:800;}
+    .state{
+      display:flex; gap:10px; align-items:center;
+      padding:10px 12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.16);
+      font-weight:950;
+    }
+    .dotS{width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.18); box-shadow:0 0 0 5px rgba(255,255,255,.06);}
+    .state[data-kind="question"] .dotS{background:var(--green);}
+    .state[data-kind="leaderboard"] .dotS{background:var(--cyan);}
+    .state[data-kind="ad"] .dotS{background:var(--amber);}
+    .state[data-kind="lobby"] .dotS{background:rgba(255,255,255,.18);}
+    .state[data-kind="ended"] .dotS{background:var(--red);}
+
+    .grid{
+      margin-top:14px;
+      display:grid; gap:12px;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    .card{
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.18);
+      border-radius:18px; padding:14px;
+    }
+    .row{
+      display:flex; justify-content:space-between; gap:12px;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      border-radius:14px;
+      margin-bottom:10px;
+      font-weight:950;
+      font-size:18px;
+    }
+    .name{display:flex; gap:10px; align-items:center;}
+    .rank{
+      width:34px; height:34px; border-radius:999px;
+      display:grid; place-items:center;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:16px;
+    }
+    .score{color:var(--cyan);}
+    .muted{color:var(--muted); font-weight:800;}
+    .bigMsg{
+      margin-top:10px;
+      font-size:28px;
+      font-weight:1000;
+      letter-spacing:.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1><span class="dot"></span>Leaderboard</h1>
+        <div class="sub">Room: <span id="roomName">—</span></div>
+      </div>
+      <div id="statePill" class="state" data-kind="lobby">
+        <span class="dotS"></span><span id="stateText">Lobby</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="muted">Top Players</div>
+        <div class="bigMsg" id="msg">Waiting for host…</div>
+      </div>
+      <div class="card">
+        <div class="muted">Scores</div>
+        <div id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import {
+      getFirestore, doc, collection, onSnapshot, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqUJwvod3rlNU2sIUnzgBthdbbOPsxB9s",
+      authDomain: "the-bypass-168-trivia.firebaseapp.com",
+      projectId: "the-bypass-168-trivia",
+      storageBucket: "the-bypass-168-trivia.firebasestorage.app",
+      messagingSenderId: "590337302600",
+      appId: "1:590337302600:web:be73cf77f5cf955aa4787d",
+      measurementId: "G-DCJJFW8ZFY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const qs = new URLSearchParams(location.search);
+    const roomId = (qs.get("room") || "bypass168").trim();
+
+    document.getElementById("roomName").textContent = roomId;
+
+    const statePill = document.getElementById("statePill");
+    const stateText = document.getElementById("stateText");
+    const msg = document.getElementById("msg");
+    const list = document.getElementById("list");
+
+    await signInAnonymously(auth);
+
+    const roomRef = doc(db, "rooms", roomId);
+    const playersRef = collection(db, "rooms", roomId, "players");
+    const playersQ = query(playersRef, orderBy("score", "desc"));
+
+    onSnapshot(roomRef, (snap) => {
+      if (!snap.exists()) {
+        statePill.dataset.kind = "ended";
+        stateText.textContent = "Room not found";
+        msg.textContent = "Ask host to create/reset the room.";
+        return;
+      }
+      const r = snap.data();
+      const s = r.state || "lobby";
+      statePill.dataset.kind = s;
+      stateText.textContent = s.toUpperCase();
+
+      if (s === "question") msg.textContent = "Question live — answer on your phone!";
+      else if (s === "leaderboard") msg.textContent = "Leaderboard — keep it going!";
+      else if (s === "ad") msg.textContent = "Intermission — grab a drink 😈";
+      else if (s === "ended") msg.textContent = "Round ended — winners on the board!";
+      else msg.textContent = "Lobby — scan the QR to join!";
+    });
+
+    onSnapshot(playersQ, (snap) => {
+      const rows = [];
+      let i = 0;
+      snap.forEach((p) => {
+        i++;
+        if (i > 12) return; // show top 12
+        const d = p.data();
+        rows.push(`
+          <div class="row">
+            <div class="name"><span class="rank">${i}</span> <span>${(d.name || "Player").slice(0,18)}</span></div>
+            <div class="score">${d.score ?? 0}</div>
+          </div>
+        `);
+      });
+
+      list.innerHTML = rows.length ? rows.join("") : `<div class="muted" style="margin-top:10px;">No players yet.</div>`;
+    });
+  </script>
+</body>
+</html>
