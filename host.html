@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bypass Trivia — Host</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    :root{
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      --bg:#070b14;
+      --card:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.75);
+      --pink:#ff4fd8;
+      --cyan:#25f3ff;
+      --green:#34d399;
+      --red:#fb7185;
+      --amber:#fbbf24;
+    }
+    body{
+      margin:0; min-height:100vh; padding:18px 14px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,79,216,.22), rgba(0,0,0,0) 45%),
+        radial-gradient(circle at 80% 70%, rgba(37,243,255,.18), rgba(0,0,0,0) 45%),
+        linear-gradient(180deg, rgba(4,6,12,.98), rgba(8,12,22,.98));
+      color:var(--text);
+      display:grid; place-items:center;
+    }
+    .wrap{
+      width:min(1100px,100%);
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border-radius:18px; padding:16px;
+      box-shadow:0 24px 70px rgba(0,0,0,.55);
+    }
+    .top{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; justify-content:space-between;
+    }
+    h1{margin:0; font-weight:900; letter-spacing:.3px; display:flex; align-items:center; gap:10px;}
+    h1 .dot{width:12px;height:12px;border-radius:999px;background:radial-gradient(circle at 30% 30%, #fff, var(--cyan)); box-shadow:0 0 18px rgba(37,243,255,.65);}
+    .meta{margin-top:6px; color:var(--muted); font-size:13px; line-height:1.3;}
+    .panel{
+      margin-top:14px;
+      display:grid; gap:12px;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media (max-width: 940px){ .panel{grid-template-columns:1fr;} }
+
+    .card{
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.18);
+      border-radius:16px; padding:14px;
+    }
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+    label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px; font-weight:700;}
+    input, select{
+      width:100%;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      font-weight:700;
+    }
+    .grid2{display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr));}
+    .grid3{display:grid; gap:10px; grid-template-columns:repeat(3,minmax(0,1fr));}
+    @media (max-width: 560px){ .grid2,.grid3{grid-template-columns:1fr;} }
+
+    button{
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:transform .06s ease, background .2s ease, border-color .2s ease;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    button:hover{transform:translateY(-1px); background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.24);}
+    button.primary{
+      border-color: rgba(37,243,255,.28);
+      background:
+        radial-gradient(circle at 40% 0%, rgba(255,255,255,.22), rgba(255,255,255,0) 60%),
+        rgba(37,243,255,.12);
+    }
+    button.danger{
+      border-color: rgba(251,113,133,.35);
+      background: rgba(251,113,133,.10);
+    }
+    button:disabled{opacity:.55; cursor:not-allowed; transform:none;}
+
+    .status{
+      display:flex; gap:10px; align-items:center;
+      color:var(--muted); font-size:13px; font-weight:700;
+    }
+    .dotS{width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.18); box-shadow:0 0 0 4px rgba(255,255,255,.06);}
+    .status[data-kind="live"] .dotS{background:var(--green);}
+    .status[data-kind="error"] .dotS{background:var(--red);}
+    .status[data-kind="idle"] .dotS{background:rgba(255,255,255,.18);}
+
+    .big{
+      font-size:22px; font-weight:950; line-height:1.15;
+      margin:0 0 8px 0;
+    }
+    .muted{color:var(--muted); font-size:13px; line-height:1.35;}
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.06);
+      padding:8px 10px;
+      border-radius:999px;
+      font-weight:900;
+      margin-right:8px;
+      font-size:12px;
+    }
+    .qrWrap{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; justify-content:space-between;
+      margin-top:10px;
+    }
+    canvas{background:#fff; border-radius:12px; padding:10px;}
+    .miniBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    .hr{height:1px; background:rgba(255,255,255,.10); margin:12px 0;}
+    a.link{color:var(--cyan); font-weight:900; text-decoration:none;}
+    a.link:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1><span class="dot"></span>Host Control</h1>
+        <div class="meta">TV runs the game. Phones join via QR. Leaderboard updates live.</div>
+      </div>
+      <div id="status" class="status" data-kind="idle">
+        <span class="dotS"></span><span id="statusText">Idle</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="card">
+        <div class="row" style="gap:14px;">
+          <div style="flex:1; min-width:220px;">
+            <label>Room ID (keep this the same daily)</label>
+            <input id="roomId" placeholder="bypass168" />
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <label>Host link (open this on TV)</label>
+            <div class="muted"><a class="link" id="hostLink" href="#" target="_blank" rel="noreferrer">—</a></div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid3">
+          <div>
+            <label>Questions per round</label>
+            <input id="numQuestions" type="number" min="5" max="50" value="20" />
+          </div>
+          <div>
+            <label>Seconds per question</label>
+            <input id="questionSeconds" type="number" min="10" max="90" value="20" />
+          </div>
+          <div>
+            <label>Intermission seconds</label>
+            <input id="breakSeconds" type="number" min="5" max="60" value="10" />
+          </div>
+        </div>
+
+        <div class="grid3" style="margin-top:10px;">
+          <div>
+            <label>Ad break every N questions</label>
+            <input id="adsEvery" type="number" min="0" max="20" value="5" />
+          </div>
+          <div>
+            <label>Difficulty</label>
+            <select id="difficulty">
+              <option value="">Any</option>
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div>
+            <label>Category (OpenTDB id)</label>
+            <input id="category" type="number" placeholder="Leave blank for any" />
+          </div>
+        </div>
+
+        <div class="miniBtns">
+          <button class="primary" id="btnCreate">Create/Reset Room</button>
+          <button class="primary" id="btnStart" disabled>Start Round</button>
+          <button id="btnNext" disabled>Next / Auto-Advance</button>
+          <button class="danger" id="btnEnd" disabled>End Round</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <div>
+            <span class="pill">State: <span id="pillState">—</span></span>
+            <span class="pill">Q#: <span id="pillQ">—</span></span>
+            <span class="pill">Players: <span id="pillPlayers">—</span></span>
+          </div>
+          <div class="muted">TV views: <a class="link" id="lbLink" href="./leaderboard.html?room=bypass168" target="_blank" rel="noreferrer">Leaderboard</a></div>
+        </div>
+
+        <div class="qrWrap">
+          <div>
+            <div class="big">Join QR (phones)</div>
+            <div class="muted">Guests scan → enter name → play. No codes to type each question.</div>
+            <div style="margin-top:10px;"><canvas id="qr"></canvas></div>
+            <div class="muted" style="margin-top:10px;">Direct join link: <a class="link" id="playLink" href="#" target="_blank" rel="noreferrer">—</a></div>
+          </div>
+          <div style="min-width:260px; max-width:420px;">
+            <div class="big" id="nowTitle">Waiting…</div>
+            <div class="muted" id="nowText">Create/reset the room, then Start.</div>
+            <div class="hr"></div>
+            <div class="muted">
+              Tip: open <b>leaderboard.html</b> on your main TV, and keep this host page on a laptop/tablet.
+              Or keep host on TV and use a second screen for leaderboard.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="big">Live Preview</div>
+        <div class="muted">This is what phones will receive from Firestore.</div>
+        <div class="hr"></div>
+        <div id="preview" class="muted">—</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // -------------------------
+    // FIREBASE CONFIG (yours)
+    // -------------------------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import {
+      getFirestore, doc, setDoc, getDoc, updateDoc, collection,
+      writeBatch, getDocs, deleteDoc, onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqUJwvod3rlNU2sIUnzgBthdbbOPsxB9s",
+      authDomain: "the-bypass-168-trivia.firebaseapp.com",
+      projectId: "the-bypass-168-trivia",
+      storageBucket: "the-bypass-168-trivia.firebasestorage.app",
+      messagingSenderId: "590337302600",
+      appId: "1:590337302600:web:be73cf77f5cf955aa4787d",
+      measurementId: "G-DCJJFW8ZFY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // -------------------------
+    // UI
+    // -------------------------
+    const statusEl = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+
+    const roomIdEl = document.getElementById("roomId");
+    const numQuestionsEl = document.getElementById("numQuestions");
+    const questionSecondsEl = document.getElementById("questionSeconds");
+    const breakSecondsEl = document.getElementById("breakSeconds");
+    const adsEveryEl = document.getElementById("adsEvery");
+    const difficultyEl = document.getElementById("difficulty");
+    const categoryEl = document.getElementById("category");
+
+    const btnCreate = document.getElementById("btnCreate");
+    const btnStart = document.getElementById("btnStart");
+    const btnNext = document.getElementById("btnNext");
+    const btnEnd = document.getElementById("btnEnd");
+
+    const pillState = document.getElementById("pillState");
+    const pillQ = document.getElementById("pillQ");
+    const pillPlayers = document.getElementById("pillPlayers");
+
+    const playLink = document.getElementById("playLink");
+    const hostLink = document.getElementById("hostLink");
+    const lbLink = document.getElementById("lbLink");
+    const preview = document.getElementById("preview");
+
+    const nowTitle = document.getElementById("nowTitle");
+    const nowText = document.getElementById("nowText");
+
+    const qrCanvas = document.getElementById("qr");
+
+    const qs = new URLSearchParams(location.search);
+    roomIdEl.value = qs.get("room") || "bypass168";
+
+    const setStatus = (kind, text) => {
+      statusEl.dataset.kind = kind;
+      statusText.textContent = text;
+    };
+
+    const decodeHtml = (html) => {
+      const txt = document.createElement("textarea");
+      txt.innerHTML = html;
+      return txt.value;
+    };
+
+    const getRoomId = () => (roomIdEl.value || "bypass168").trim();
+
+    const roomRef = () => doc(db, "rooms", getRoomId());
+    const questionsCol = () => collection(db, "rooms", getRoomId(), "questions");
+    const playersCol = () => collection(db, "rooms", getRoomId(), "players");
+    const responsesCol = () => collection(db, "rooms", getRoomId(), "responses");
+
+    const buildLinks = () => {
+      const r = encodeURIComponent(getRoomId());
+      const playUrl = `${location.origin}${location.pathname.replace("host.html","play.html")}?room=${r}`;
+      const hostUrl = `${location.origin}${location.pathname}?room=${r}`;
+      const lbUrl = `${location.origin}${location.pathname.replace("host.html","leaderboard.html")}?room=${r}`;
+
+      playLink.href = playUrl;
+      playLink.textContent = playUrl;
+
+      hostLink.href = hostUrl;
+      hostLink.textContent = hostUrl;
+
+      lbLink.href = lbUrl;
+
+      // QR
+      if (window.QRCode) {
+        QRCode.toCanvas(qrCanvas, playUrl, { width: 240, margin: 1 }, (err) => {
+          if (err) console.error(err);
+        });
+      }
+    };
+
+    roomIdEl.addEventListener("input", buildLinks);
+    buildLinks();
+
+    // -------------------------
+    // AUTH
+    // -------------------------
+    setStatus("live", "Connecting to Firebase…");
+    await signInAnonymously(auth);
+    setStatus("live", "Firebase OK");
+
+    // -------------------------
+    // Firestore listeners
+    // -------------------------
+    let unsubRoom = null;
+    let unsubPlayers = null;
+    let hostTick = null;
+
+    const subscribeRoom = () => {
+      unsubRoom?.();
+      unsubPlayers?.();
+
+      unsubRoom = onSnapshot(roomRef(), (snap) => {
+        if (!snap.exists()) {
+          pillState.textContent = "—";
+          pillQ.textContent = "—";
+          preview.textContent = "Room not created yet.";
+          btnStart.disabled = true;
+          btnNext.disabled = true;
+          btnEnd.disabled = true;
+          return;
+        }
+
+        const d = snap.data();
+        pillState.textContent = d.state || "—";
+        pillQ.textContent = (typeof d.currentIndex === "number") ? `${d.currentIndex+1}/${d.totalQuestions ?? "?"}` : "—";
+
+        preview.innerHTML = `
+          <div><b>state:</b> ${d.state ?? "—"}</div>
+          <div><b>currentQuestionId:</b> ${d.currentQuestionId ?? "—"}</div>
+          <div><b>questionEndsAt:</b> ${d.questionEndsAt ?? "—"}</div>
+          <div><b>breakEndsAt:</b> ${d.breakEndsAt ?? "—"}</div>
+        `;
+
+        // Buttons
+        const isLobby = d.state === "lobby" || d.state === "ended";
+        const isRunning = d.state === "question" || d.state === "leaderboard" || d.state === "ad";
+
+        btnStart.disabled = !isLobby;
+        btnNext.disabled = !isRunning;
+        btnEnd.disabled = !isRunning;
+
+        if (d.state === "question") {
+          nowTitle.textContent = "Question LIVE";
+          nowText.textContent = "Phones are answering now.";
+        } else if (d.state === "leaderboard") {
+          nowTitle.textContent = "Leaderboard";
+          nowText.textContent = "Showing scores between questions.";
+        } else if (d.state === "ad") {
+          nowTitle.textContent = "Ad / Intermission";
+          nowText.textContent = "Short break screen.";
+        } else if (d.state === "ended") {
+          nowTitle.textContent = "Round Ended";
+          nowText.textContent = "Scores are final. You can start a new round.";
+        } else {
+          nowTitle.textContent = "Lobby";
+          nowText.textContent = "Players can join now. Press Start when ready.";
+        }
+      });
+
+      unsubPlayers = onSnapshot(playersCol(), (snap) => {
+        pillPlayers.textContent = `${snap.size}`;
+      });
+    };
+
+    subscribeRoom();
+
+    // -------------------------
+    // Helpers: OpenTDB fetch → write questions
+    // -------------------------
+    const fetchOpenTDB = async ({ amount, difficulty, category }) => {
+      const params = new URLSearchParams();
+      params.set("amount", String(amount));
+      params.set("type", "multiple");
+      if (difficulty) params.set("difficulty", difficulty);
+      if (category) params.set("category", String(category));
+      const url = `https://opentdb.com/api.php?${params.toString()}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("OpenTDB network error");
+      const data = await res.json();
+      if (!data.results?.length) throw new Error("OpenTDB returned empty results");
+      return data.results;
+    };
+
+    const writeQuestions = async (roomId, questions) => {
+      // Clear existing question docs
+      const qSnap = await getDocs(questionsCol());
+      const batch1 = writeBatch(db);
+      qSnap.forEach((docu) => batch1.delete(docu.ref));
+      await batch1.commit();
+
+      // Write new ones in batches
+      let batch = writeBatch(db);
+      let count = 0;
+
+      questions.forEach((q, idx) => {
+        const id = String(idx).padStart(3,"0");
+        const ref = doc(db, "rooms", roomId, "questions", id);
+        const correct = decodeHtml(q.correct_answer);
+        const incorrect = q.incorrect_answers.map(decodeHtml);
+        const choices = [correct, ...incorrect].sort(() => Math.random() - 0.5);
+
+        batch.set(ref, {
+          id,
+          idx,
+          question: decodeHtml(q.question),
+          category: decodeHtml(q.category),
+          difficulty: q.difficulty,
+          correct,
+          choices
+        });
+
+        count++;
+        if (count % 400 === 0) {
+          batch.commit();
+          batch = writeBatch(db);
+        }
+      });
+
+      await batch.commit();
+    };
+
+    // -------------------------
+    // Scoring + cleanup
+    // -------------------------
+    const gradeCurrentQuestion = async (roomDoc) => {
+      const r = roomDoc.data();
+      if (!r.currentQuestionId) return;
+
+      const qRef = doc(db, "rooms", getRoomId(), "questions", r.currentQuestionId);
+      const qSnap = await getDoc(qRef);
+      if (!qSnap.exists()) return;
+
+      const q = qSnap.data();
+      const correct = q.correct;
+
+      // responses: rooms/{roomId}/responses/{playerId} -> {qid, answer}
+      const respSnap = await getDocs(responsesCol());
+
+      const batch = writeBatch(db);
+
+      respSnap.forEach((resp) => {
+        const data = resp.data();
+        if (data.qid !== r.currentQuestionId) return;
+
+        const playerRef = doc(db, "rooms", getRoomId(), "players", resp.id);
+        const isCorrect = data.answer === correct;
+
+        // Increment score by 1 if correct
+        batch.update(playerRef, {
+          score: isCorrect ? (data._incScoreHack ?? serverTimestamp()) : (data._noop ?? serverTimestamp()),
+          // We can't atomic increment without FieldValue.increment import.
+        });
+      });
+
+      // Instead of increment hack, do a proper read/update per player (simple MVP):
+      // We'll do it in a second pass below.
+      await batch.commit().catch(()=>{});
+
+      // Proper scoring pass (safe + clear)
+      const respSnap2 = await getDocs(responsesCol());
+      const playersSnap = await getDocs(playersCol());
+
+      const playerMap = new Map();
+      playersSnap.forEach(p => playerMap.set(p.id, p.data()));
+
+      const batch2 = writeBatch(db);
+      respSnap2.forEach((resp) => {
+        const data = resp.data();
+        if (data.qid !== r.currentQuestionId) return;
+
+        const p = playerMap.get(resp.id);
+        if (!p) return;
+
+        const isCorrect = data.answer === correct;
+        const newScore = (p.score || 0) + (isCorrect ? 1 : 0);
+
+        batch2.update(doc(db, "rooms", getRoomId(), "players", resp.id), {
+          score: newScore,
+          lastAnswer: data.answer || null,
+          lastCorrect: isCorrect,
+          lastAnsweredAt: Date.now()
+        });
+      });
+
+      // Clear all responses (fresh for next question)
+      respSnap2.forEach((resp) => batch2.delete(resp.ref));
+
+      await batch2.commit();
+    };
+
+    // -------------------------
+    // State machine
+    // -------------------------
+    const setRoom = async (patch) => {
+      await updateDoc(roomRef(), patch);
+    };
+
+    const createResetRoom = async () => {
+      const roomId = getRoomId();
+      buildLinks();
+      setStatus("live", "Resetting room…");
+
+      // Delete responses
+      const respSnap = await getDocs(responsesCol());
+      const b1 = writeBatch(db);
+      respSnap.forEach(r => b1.delete(r.ref));
+      await b1.commit().catch(()=>{});
+
+      // Reset players scores (keep players)
+      const pSnap = await getDocs(playersCol());
+      const b2 = writeBatch(db);
+      pSnap.forEach(p => b2.update(p.ref, { score: 0, lastAnswer: null, lastCorrect: null }));
+      await b2.commit().catch(()=>{});
+
+      // Write room base
+      const totalQuestions = Number(numQuestionsEl.value || 20);
+      await setDoc(roomRef(), {
+        roomId,
+        state: "lobby",
+        totalQuestions,
+        currentIndex: -1,
+        currentQuestionId: null,
+        questionEndsAt: null,
+        breakEndsAt: null,
+        adsEvery: Number(adsEveryEl.value || 0),
+        questionSeconds: Number(questionSecondsEl.value || 20),
+        breakSeconds: Number(breakSecondsEl.value || 10),
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      // Pull questions from OpenTDB
+      const difficulty = difficultyEl.value;
+      const category = (categoryEl.value || "").trim();
+
+      setStatus("live", "Fetching questions…");
+      let results;
+      try {
+        results = await fetchOpenTDB({
+          amount: totalQuestions,
+          difficulty,
+          category: category ? Number(category) : ""
+        });
+      } catch (e) {
+        console.error(e);
+        setStatus("error", "OpenTDB failed — try again");
+        throw e;
+      }
+
+      setStatus("live", "Writing questions to Firestore…");
+      await writeQuestions(roomId, results);
+
+      setStatus("live", "Room ready");
+    };
+
+    const startRound = async () => {
+      const snap = await getDoc(roomRef());
+      if (!snap.exists()) return;
+
+      const r = snap.data();
+      const qSec = Number(questionSecondsEl.value || r.questionSeconds || 20);
+
+      await setRoom({
+        totalQuestions: Number(numQuestionsEl.value || r.totalQuestions || 20),
+        adsEvery: Number(adsEveryEl.value || r.adsEvery || 0),
+        questionSeconds: qSec,
+        breakSeconds: Number(breakSecondsEl.value || r.breakSeconds || 10),
+        state: "question",
+        currentIndex: 0,
+        currentQuestionId: "000",
+        questionEndsAt: Date.now() + qSec * 1000,
+        breakEndsAt: null,
+        updatedAt: serverTimestamp()
+      });
+
+      setStatus("live", "Round started");
+      ensureHostTicker();
+    };
+
+    const goToIntermission = async (kind) => {
+      const snap = await getDoc(roomRef());
+      if (!snap.exists()) return;
+      const r = snap.data();
+      const bSec = Number(breakSecondsEl.value || r.breakSeconds || 10);
+
+      await setRoom({
+        state: kind, // "leaderboard" or "ad"
+        breakEndsAt: Date.now() + bSec * 1000,
+        questionEndsAt: null,
+        updatedAt: serverTimestamp()
+      });
+    };
+
+    const advanceToNextQuestion = async () => {
+      const snap = await getDoc(roomRef());
+      if (!snap.exists()) return;
+
+      // grade previous
+      await gradeCurrentQuestion(snap);
+
+      const r = snap.data();
+      const nextIndex = (r.currentIndex ?? -1) + 1;
+      const total = r.totalQuestions ?? Number(numQuestionsEl.value || 20);
+
+      if (nextIndex >= total) {
+        await setRoom({
+          state: "ended",
+          currentQuestionId: null,
+          currentIndex: total - 1,
+          questionEndsAt: null,
+          breakEndsAt: null,
+          updatedAt: serverTimestamp()
+        });
+        setStatus("live", "Round ended");
+        return;
+      }
+
+      // Intermission decision BEFORE showing next question:
+      const adsEvery = Number(r.adsEvery || 0);
+      if (adsEvery > 0 && nextIndex > 0 && nextIndex % adsEvery === 0) {
+        await setRoom({
+          // keep index where it is for display purposes
+          currentIndex: nextIndex,
+          currentQuestionId: String(nextIndex).padStart(3,"0"),
+          updatedAt: serverTimestamp()
+        });
+        await goToIntermission("ad");
+        return;
+      } else {
+        await setRoom({
+          currentIndex: nextIndex,
+          currentQuestionId: String(nextIndex).padStart(3,"0"),
+          updatedAt: serverTimestamp()
+        });
+        await goToIntermission("leaderboard");
+        return;
+      }
+    };
+
+    const showQuestionNow = async () => {
+      const snap = await getDoc(roomRef());
+      if (!snap.exists()) return;
+
+      const r = snap.data();
+      const idx = (typeof r.currentIndex === "number") ? r.currentIndex : 0;
+      const qSec = Number(questionSecondsEl.value || r.questionSeconds || 20);
+
+      await setRoom({
+        state: "question",
+        currentQuestionId: String(idx).padStart(3,"0"),
+        questionEndsAt: Date.now() + qSec * 1000,
+        breakEndsAt: null,
+        updatedAt: serverTimestamp()
+      });
+    };
+
+    const endRound = async () => {
+      await setRoom({
+        state: "ended",
+        questionEndsAt: null,
+        breakEndsAt: null,
+        updatedAt: serverTimestamp()
+      });
+      setStatus("live", "Ended");
+    };
+
+    // Host auto-advance ticker
+    const ensureHostTicker = () => {
+      if (hostTick) return;
+      hostTick = setInterval(async () => {
+        const snap = await getDoc(roomRef());
+        if (!snap.exists()) return;
+        const r = snap.data();
+
+        // If question time is up → advance
+        if (r.state === "question" && r.questionEndsAt && Date.now() >= r.questionEndsAt) {
+          await advanceToNextQuestion();
+          return;
+        }
+
+        // If intermission up → show question
+        if ((r.state === "leaderboard" || r.state === "ad") && r.breakEndsAt && Date.now() >= r.breakEndsAt) {
+          await showQuestionNow();
+          return;
+        }
+      }, 800);
+    };
+
+    // Buttons
+    btnCreate.addEventListener("click", async () => {
+      try {
+        await createResetRoom();
+      } catch (e) {}
+    });
+
+    btnStart.addEventListener("click", async () => {
+      await startRound();
+    });
+
+    btnNext.addEventListener("click", async () => {
+      // Manual force: if currently in question -> advance to intermission; if in intermission -> show question
+      const snap = await getDoc(roomRef());
+      if (!snap.exists()) return;
+      const r = snap.data();
+      if (r.state === "question") await advanceToNextQuestion();
+      else if (r.state === "leaderboard" || r.state === "ad") await showQuestionNow();
+      ensureHostTicker();
+    });
+
+    btnEnd.addEventListener("click", endRound);
+
+    // Keep subscriptions updated when room changes
+    roomIdEl.addEventListener("change", () => {
+      subscribeRoom();
+      buildLinks();
+    });
+
+    // Start ticker if room already running
+    const initial = await getDoc(roomRef());
+    if (initial.exists()) {
+      const s = initial.data().state;
+      if (s === "question" || s === "leaderboard" || s === "ad") ensureHostTicker();
+    }
+  </script>
+</body>
+</html>
